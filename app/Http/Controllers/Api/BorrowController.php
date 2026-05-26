@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Borrow;
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BorrowController extends Controller
 {
@@ -23,15 +24,17 @@ class BorrowController extends Controller
             'atdosanas_datums' => 'nullable|date|after_or_equal:aiznemsanas_datums',
         ]);
 
-        $book = Book::findOrFail($validated['gramata_id']);
+        return DB::transaction(function () use ($validated) {
+            $affected = Book::where('id', $validated['gramata_id'])
+                ->where('pieejamie_eksemplari', '>', 0)
+                ->decrement('pieejamie_eksemplari');
 
-        if ($book->pieejamie_eksemplari <= 0) {
-            return response()->json(['error' => 'Nav pieejamu eksemplāru'], 400);
-        }
+            if ($affected === 0) {
+                return response()->json(['error' => 'Nav pieejamu eksemplāru'], 400);
+            }
 
-        $book->decrement('pieejamie_eksemplari');
-
-        return Borrow::create($validated);
+            return Borrow::create($validated);
+        });
     }
 
     public function show(Borrow $borrow)
@@ -48,15 +51,31 @@ class BorrowController extends Controller
             'atdosanas_datums' => 'nullable|date|after_or_equal:aiznemsanas_datums',
         ]);
 
-        $borrow->update($validated);
+        return DB::transaction(function () use ($validated, $borrow) {
+            if (isset($validated['gramata_id']) && $validated['gramata_id'] != $borrow->gramata_id) {
+                $borrow->book()->increment('pieejamie_eksemplari');
 
-        return $borrow->load(['book', 'reader']);
+                $affected = Book::where('id', $validated['gramata_id'])
+                    ->where('pieejamie_eksemplari', '>', 0)
+                    ->decrement('pieejamie_eksemplari');
+
+                if ($affected === 0) {
+                    throw new \RuntimeException('Nav pieejamu eksemplāru jaunajai grāmatai');
+                }
+            }
+
+            $borrow->update($validated);
+
+            return $borrow->load(['book', 'reader']);
+        });
     }
 
     public function destroy(Borrow $borrow)
     {
-        $borrow->book()->increment('pieejamie_eksemplari');
-        $borrow->delete();
+        DB::transaction(function () use ($borrow) {
+            $borrow->book()->increment('pieejamie_eksemplari');
+            $borrow->delete();
+        });
 
         return response()->noContent();
     }
