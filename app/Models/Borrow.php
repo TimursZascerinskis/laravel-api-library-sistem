@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Database\Factories\BorrowFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Borrow extends Model
 {
+    /** @use HasFactory<BorrowFactory> */
+    use HasFactory;
+
     protected $fillable = ['gramata_id', 'lasitajs_id', 'aiznemsanas_datums', 'atdosanas_datums'];
 
     public function book()
