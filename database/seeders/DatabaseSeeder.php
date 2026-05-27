@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             BookSeeder::class,
             ReaderSeeder::class,
             BorrowSeeder::class,
+            OverdueBorrowSeeder::class,
         ]);
     }
 }
