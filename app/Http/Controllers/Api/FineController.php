@@ -25,20 +25,39 @@ class FineController extends Controller
 
     public function calculate(Reader $reader)
     {
-        $result = DB::select('
-            SELECT
-                COUNT(*) AS kavejumu_skaits,
-                COALESCE(SUM(
-                    CAST(julianday(DATE(\'now\')) - julianday(DATE(b.aiznemsanas_datums, \'+14 days\')) AS INTEGER)
-                ), 0) AS kavejuma_dienas,
-                COALESCE(SUM(
-                    CAST(julianday(DATE(\'now\')) - julianday(DATE(b.aiznemsanas_datums, \'+14 days\')) AS INTEGER) * 0.50
-                ), 0) AS kopejais_sods
-            FROM borrows b
-            WHERE b.lasitajs_id = ?
-              AND b.atdosanas_datums IS NULL
-              AND DATE(b.aiznemsanas_datums, \'+14 days\') < DATE(\'now\')
-        ', [$reader->id]);
+        $driver = DB::connection()->getDriverName();
+
+        if ($driver === 'pgsql') {
+            $result = DB::select('
+                SELECT
+                    COUNT(*) AS kavejumu_skaits,
+                    COALESCE(SUM(
+                        CURRENT_DATE - (b.aiznemsanas_datums + 14)
+                    ), 0) AS kavejuma_dienas,
+                    COALESCE(SUM(
+                        (CURRENT_DATE - (b.aiznemsanas_datums + 14)) * 0.50
+                    ), 0) AS kopejais_sods
+                FROM borrows b
+                WHERE b.lasitajs_id = ?
+                  AND b.atdosanas_datums IS NULL
+                  AND (b.aiznemsanas_datums + 14) < CURRENT_DATE
+            ', [$reader->id]);
+        } else {
+            $result = DB::select('
+                SELECT
+                    COUNT(*) AS kavejumu_skaits,
+                    COALESCE(SUM(
+                        CAST(julianday(DATE(\'now\')) - julianday(DATE(b.aiznemsanas_datums, \'+14 days\')) AS INTEGER)
+                    ), 0) AS kavejuma_dienas,
+                    COALESCE(SUM(
+                        CAST(julianday(DATE(\'now\')) - julianday(DATE(b.aiznemsanas_datums, \'+14 days\')) AS INTEGER) * 0.50
+                    ), 0) AS kopejais_sods
+                FROM borrows b
+                WHERE b.lasitajs_id = ?
+                  AND b.atdosanas_datums IS NULL
+                  AND DATE(b.aiznemsanas_datums, \'+14 days\') < DATE(\'now\')
+            ', [$reader->id]);
+        }
 
         $data = [
             'lasitajs_id' => $reader->id,

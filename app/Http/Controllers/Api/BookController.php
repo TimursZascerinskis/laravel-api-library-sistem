@@ -26,7 +26,12 @@ class BookController extends Controller
         $viewData = ['books' => $books];
 
         if ($request->filled('q') && $request->boolean('explain')) {
-            $explain = DB::select('EXPLAIN QUERY PLAN SELECT * FROM books WHERE nosaukums LIKE ?', ['%' . $request->q . '%']);
+            $driver = DB::connection()->getDriverName();
+            if ($driver === 'pgsql') {
+                $explain = DB::select('EXPLAIN (ANALYZE false, FORMAT TEXT) SELECT * FROM books WHERE nosaukums::text LIKE ?', ['%' . $request->q . '%']);
+            } else {
+                $explain = DB::select('EXPLAIN QUERY PLAN SELECT * FROM books WHERE nosaukums LIKE ?', ['%' . $request->q . '%']);
+            }
             $viewData['explain'] = $explain;
         }
 
