@@ -9,6 +9,12 @@ class OverdueBorrowsController extends Controller
 {
     public function index()
     {
-        return DB::table('overdue_borrows')->get();
+        $borrows = DB::table('overdue_borrows')->get();
+
+        if (request()->expectsJson()) {
+            return $borrows;
+        }
+
+        return view('overdue-borrows', ['borrows' => $borrows]);
     }
 }
