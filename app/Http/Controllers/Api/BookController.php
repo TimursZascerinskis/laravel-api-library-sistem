@@ -8,9 +8,15 @@ use Illuminate\Http\Request;
 
 class BookController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return Book::all()->map(fn ($book) => $this->addLinks($book));
+        $query = Book::query();
+
+        if ($request->filled('q')) {
+            $query->where('nosaukums', 'like', '%' . $request->q . '%');
+        }
+
+        return $query->get()->map(fn ($book) => $this->addLinks($book));
     }
 
     public function store(Request $request)
