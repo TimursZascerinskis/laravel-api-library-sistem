@@ -12,4 +12,9 @@ class Reader extends Model
     use HasFactory;
 
     protected $fillable = ['vards', 'e_pasts'];
+
+    public function borrows()
+    {
+        return $this->hasMany(Borrow::class, 'lasitajs_id');
+    }
 }

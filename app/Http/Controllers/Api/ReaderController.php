@@ -10,7 +10,7 @@ class ReaderController extends Controller
 {
     public function index()
     {
-        return Reader::all();
+        return Reader::all()->map(fn ($reader) => $this->addLinks($reader));
     }
 
     public function store(Request $request)
@@ -20,12 +20,12 @@ class ReaderController extends Controller
             'e_pasts' => 'required|email|max:255|unique:readers,e_pasts',
         ]);
 
-        return Reader::create($validated);
+        return $this->addLinks(Reader::create($validated));
     }
 
     public function show(Reader $reader)
     {
-        return $reader;
+        return $this->addLinks($reader);
     }
 
     public function update(Request $request, Reader $reader)
@@ -37,7 +37,7 @@ class ReaderController extends Controller
 
         $reader->update($validated);
 
-        return $reader;
+        return $this->addLinks($reader);
     }
 
     public function destroy(Reader $reader)
@@ -45,5 +45,16 @@ class ReaderController extends Controller
         $reader->delete();
 
         return response()->noContent();
+    }
+
+    private function addLinks(Reader $reader)
+    {
+        $data = $reader->toArray();
+        $data['_links'] = [
+            'borrows' => ['href' => route('borrows.index', ['lasitajs_id' => $reader->id])],
+            'fines'   => ['href' => route('fines.calculate', $reader->id)],
+        ];
+
+        return $data;
     }
 }

@@ -8,6 +8,21 @@ use Illuminate\Support\Facades\DB;
 
 class FineController extends Controller
 {
+    public function index()
+    {
+        $fines = DB::table('reader_fines')
+            ->join('readers', 'reader_fines.lasitajs_id', '=', 'readers.id')
+            ->select('reader_fines.*', 'readers.vards', 'readers.e_pasts')
+            ->orderBy('kopejais_sods', 'desc')
+            ->get();
+
+        if (request()->expectsJson()) {
+            return response()->json($fines->map(fn ($fine) => $this->addLinks($fine)));
+        }
+
+        return view('fines-index', ['fines' => $fines]);
+    }
+
     public function calculate(Reader $reader)
     {
         $result = DB::select('
@@ -35,10 +50,25 @@ class FineController extends Controller
             'kopejais_sods' => (float) $result[0]->kopejais_sods,
         ];
 
+        $data['_links'] = [
+            'reader' => ['href' => route('readers.show', $reader->id)],
+        ];
+
         if (request()->expectsJson()) {
             return response()->json($data);
         }
 
         return view('reader-fine', ['data' => $data]);
+    }
+
+    private function addLinks($fine)
+    {
+        $data = (array) $fine;
+        $data['_links'] = [
+            'reader'       => ['href' => route('readers.show', $fine->lasitajs_id)],
+            'reader_fines' => ['href' => route('fines.calculate', $fine->lasitajs_id)],
+        ];
+
+        return (object) $data;
     }
 }

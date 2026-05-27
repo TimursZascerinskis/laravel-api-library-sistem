@@ -10,7 +10,7 @@ class BookController extends Controller
 {
     public function index()
     {
-        return Book::all();
+        return Book::all()->map(fn ($book) => $this->addLinks($book));
     }
 
     public function store(Request $request)
@@ -21,12 +21,12 @@ class BookController extends Controller
             'pieejamie_eksemplari' => 'required|integer|min:0',
         ]);
 
-        return Book::create($validated);
+        return $this->addLinks(Book::create($validated));
     }
 
     public function show(Book $book)
     {
-        return $book;
+        return $this->addLinks($book);
     }
 
     public function update(Request $request, Book $book)
@@ -39,7 +39,7 @@ class BookController extends Controller
 
         $book->update($validated);
 
-        return $book;
+        return $this->addLinks($book);
     }
 
     public function destroy(Book $book)
@@ -47,5 +47,15 @@ class BookController extends Controller
         $book->delete();
 
         return response()->noContent();
+    }
+
+    private function addLinks(Book $book)
+    {
+        $data = $book->toArray();
+        $data['_links'] = [
+            'borrows' => ['href' => route('borrows.index', ['gramata_id' => $book->id])],
+        ];
+
+        return $data;
     }
 }

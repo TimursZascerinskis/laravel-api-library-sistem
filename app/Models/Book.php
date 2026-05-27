@@ -12,4 +12,9 @@ class Book extends Model
     use HasFactory;
 
     protected $fillable = ['nosaukums', 'isbn', 'pieejamie_eksemplari'];
+
+    public function borrows()
+    {
+        return $this->hasMany(Borrow::class, 'gramata_id');
+    }
 }

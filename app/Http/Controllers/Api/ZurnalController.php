@@ -13,6 +13,17 @@ class ZurnalController extends Controller
             ->join('books', 'zurnals.gramata_id', '=', 'books.id')
             ->select('zurnals.*', 'books.nosaukums as gramatas_nosaukums')
             ->latest('zurnals.created_at')
-            ->get();
+            ->get()
+            ->map(fn ($entry) => $this->addLinks($entry));
+    }
+
+    private function addLinks($entry)
+    {
+        $data = (array) $entry;
+        $data['_links'] = [
+            'book' => ['href' => route('books.show', $entry->gramata_id)],
+        ];
+
+        return (object) $data;
     }
 }

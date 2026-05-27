@@ -8,6 +8,10 @@
 </head>
 <body class="bg-gray-50 min-h-screen py-8 px-4">
     <div class="max-w-2xl mx-auto">
+        <div class="mb-4">
+            <a href="/api/overdue-borrows" class="text-sm text-blue-600 hover:text-blue-800 underline">&larr; Atpakaļ uz kavēto aizņēmumu sarakstu</a>
+        </div>
+
         <div class="bg-white rounded-lg shadow overflow-hidden">
             <div class="px-6 py-4 bg-gray-100 border-b border-gray-200">
                 <h1 class="text-xl font-bold text-gray-900">Naudas soda aprēķins</h1>
