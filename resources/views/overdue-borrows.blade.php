@@ -11,6 +11,7 @@
         <div class="flex items-center justify-between mb-6">
             <h1 class="text-2xl font-bold text-gray-900">Kavētie aizņēmumi</h1>
             <div class="flex items-center gap-4">
+                <a href="/api/books" class="text-sm text-blue-600 hover:text-blue-800 underline">Grāmatas</a>
                 <a href="/api/fines" class="text-sm text-blue-600 hover:text-blue-800 underline">Sodi pa lasītājiem</a>
                 <span class="text-sm text-gray-500">{{ count($borrows) }} ieraksti</span>
             </div>

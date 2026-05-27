@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Book;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BookController extends Controller
 {
@@ -16,7 +17,20 @@ class BookController extends Controller
             $query->where('nosaukums', 'like', '%' . $request->q . '%');
         }
 
-        return $query->get()->map(fn ($book) => $this->addLinks($book));
+        $books = $query->get()->map(fn ($book) => $this->addLinks($book));
+
+        if ($request->expectsJson()) {
+            return $books;
+        }
+
+        $viewData = ['books' => $books];
+
+        if ($request->filled('q') && $request->boolean('explain')) {
+            $explain = DB::select('EXPLAIN QUERY PLAN SELECT * FROM books WHERE nosaukums LIKE ?', ['%' . $request->q . '%']);
+            $viewData['explain'] = $explain;
+        }
+
+        return view('books.index', $viewData);
     }
 
     public function store(Request $request)
